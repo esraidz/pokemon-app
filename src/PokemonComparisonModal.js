@@ -551,7 +551,7 @@ function PokemonComparisonModal({ isOpen, onClose, allPokemonNames }) {
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose}>Kapat</Button>
+        <Button onClick={handleClose}>Close</Button>
       </DialogActions>
     </Dialog>
   );

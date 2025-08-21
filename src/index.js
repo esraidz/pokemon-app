@@ -1,10 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import App from './App';
-import { CustomThemeProvider } from './ThemeContext';
+import './index.css';
+import App from './App'; // .js uzantısı OLMAMALI
+import { CustomThemeProvider } from './ThemeContext'; // .js uzantısı OLMAMALI
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
-
 root.render(
   <React.StrictMode>
     <CustomThemeProvider>
@@ -12,3 +12,4 @@ root.render(
     </CustomThemeProvider>
   </React.StrictMode>
 );
+
