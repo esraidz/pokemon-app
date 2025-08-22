@@ -20,10 +20,10 @@ export default class PokemonService {
           const data = details.data;
           
           return new Pokemon(
+            data.id, // <-- id EKLENDİ
             data.name,
             data.sprites.other['official-artwork'].front_default || data.sprites.front_default || 'https://placehold.co/140x140/f0f0f0/cccccc?text=No+Image',
             data.types.map((t) => t.type.name)
-            
           );
         })
       );
@@ -35,11 +35,6 @@ export default class PokemonService {
     }
   }
 
-  /**
-   * PokeAPI'den tüm Pokemon isimlerini çeker.
-   * Autocomplete önerileri için kullanılır.
-   * @returns {Promise<string[]>} Tüm Pokemon isimlerinin listesi.
-   */
   static async getAllPokemonNames() {
     try {
       const res = await axios.get('https://pokeapi.co/api/v2/pokemon?limit=2000');
@@ -51,18 +46,13 @@ export default class PokemonService {
     }
   }
 
-  /**
-   * Belirtilen Pokemon adının tüm detaylarını (resim, tipler, statlar, yetenekler vb.) çeker.
-   * Detay sayfası için kullanılır ve genişletilmiş Pokemon sınıfı örneği döndürür.
-   * @param {string} name - Detayları çekilecek Pokemon'un adı.
-   * @returns {Promise<Pokemon|null>} Pokemon sınıfı örneği veya bulunamazsa null.
-   */
   static async getPokemonDetail(name) {
     try {
       const res = await axios.get(`https://pokeapi.co/api/v2/pokemon/${name.toLowerCase()}`);
       const data = res.data;
       
       return new Pokemon(
+        data.id, // <-- id EKLENDİ
         data.name,
         data.sprites.other['official-artwork'].front_default || data.sprites.front_default || 'https://placehold.co/200x200/f0f0f0/cccccc?text=No+Image',
         data.types.map((t) => t.type.name),
@@ -85,11 +75,6 @@ export default class PokemonService {
     }
   }
 
-  /**
-   * Belirtilen Pokemon tipinin hasar ilişkilerini (kimlere karşı güçlü/zayıf) çeker.
-   * @param {string} typeName - Hasar ilişkileri çekilecek tipin adı.
-   * @returns {Promise<Object|null>} Tipin hasar ilişkileri veya bulunamazsa null.
-   */
   static async getTypeDamageRelations(typeName) {
     try {
       const res = await axios.get(`https://pokeapi.co/api/v2/type/${typeName.toLowerCase()}/`);

@@ -5,20 +5,27 @@ import Navbar from "./components/Navbar";
 import PokemonListPage from "./pages/PokemonListPage";
 import LandingPage from "./pages/LandingPage";
 import FAQPage from "./pages/FAQPage";
-import Register from "./pages/Register"; // yeni
-import Login from "./pages/Login";       // yeni
+import Register from "./pages/Register";
+import Login from "./pages/Login";
+import Profile from "./pages/Profile";
+import FavoritesPage from "./pages/FavoritesPage"; // 🆕 Favoriler sayfası eklendi
+import { AuthProvider } from "./context/AuthContext";
 
 function App() {
   return (
     <Router>
-      <Navbar />
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/pokemons" element={<PokemonListPage />} />
-        <Route path="/faq" element={<FAQPage />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/login" element={<Login />} />
-      </Routes>
+      <AuthProvider>
+        <Navbar />
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/pokemons" element={<PokemonListPage />} />
+          <Route path="/faq" element={<FAQPage />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/favorites" element={<FavoritesPage />} /> {/* 🆕 Favoriler rotası */}
+        </Routes>
+      </AuthProvider>
     </Router>
   );
 }

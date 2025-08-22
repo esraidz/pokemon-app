@@ -1,4 +1,4 @@
-// src/pages/Profile.js
+// src/pages/FavoritesPage.js
 import React, { useEffect, useState } from "react";
 import {
   Box,
@@ -16,86 +16,87 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloseIcon from '@mui/icons-material/Close';
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-import axios from "axios";
+import { useAuth } from "../context/AuthContext"; // useAuth hook from AuthContext
 
-export default function Profile() {
-  const { user, token, loading: authLoading, logout, setUser, removeFavorite } = useAuth();
+export default function FavoritesPage() {
+  const { user, token, loading: authLoading, logout, removeFavorite } = useAuth();
   const navigate = useNavigate();
   const [error, setError] = useState("");
-  const [apiLoading, setApiLoading] = useState(true);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
 
+  // Check user and authorization status
   useEffect(() => {
-    if (!authLoading && token) {
-      const fetchProfile = async () => {
-        try {
-          setApiLoading(true);
-          const res = await axios.get("http://localhost:5001/api/auth/profile", {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          setUser(res.data.user);
-        } catch (err) {
-          console.error("Error fetching profile data:", err); // Profil verileri çekilirken hata
-          setError(err.response?.data?.error || "An error occurred while loading profile data."); // Profil verileri yüklenirken bir hata oluştu.
-        } finally {
-          setApiLoading(false);
-        }
-      };
-      fetchProfile();
+    if (!authLoading) {
+      if (!token || !user) {
+        setError("No active session. Please log in."); // Aktif oturum yok. Lütfen giriş yapın.
+        // navigate('/login'); // Optional: redirect to login page if no token
+        return;
+      }
+      setError(""); // Clear error if no error
     }
-  }, [authLoading, token]); // user and setUser are no longer dependencies
+  }, [authLoading, token, user]);
 
+  // Remove Favorite Pokémon action
   const handleRemoveFavorite = async (pokemonId, pokemonName) => {
     try {
-      await removeFavorite(pokemonId);
+      await removeFavorite(pokemonId); // Call removeFavorite function
       setSnackbarMessage(`${pokemonName} successfully removed from favorites.`); // favorilerden başarıyla silindi.
       setSnackbarSeverity("success");
       setSnackbarOpen(true);
     } catch (err) {
       console.error("Error removing favorite:", err); // Favori silinirken hata:
-      const errorMessage = err.response?.data?.error || "An error occurred while removing favorite."; // Favori silinirken bir hata oluştu.
+      const errorMessage = err.response?.data?.error || err.message || "An error occurred while removing favorite."; // Favori silinirken bir hata oluştu.
       setSnackbarMessage(`Error: ${errorMessage}`); // Hata:
       setSnackbarSeverity("error");
       setSnackbarOpen(true);
     }
   };
 
+  // Snackbar close action
   const handleSnackbarClose = (event, reason) => {
-    if (reason === 'clickaway') return;
+    if (reason === 'clickaway') {
+      return;
+    }
     setSnackbarOpen(false);
   };
 
-  if (authLoading || apiLoading) {
+  // Check loading status
+  if (authLoading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
         <CircularProgress />
-        <Typography variant="h6" sx={{ ml: 2 }}>Loading profile...</Typography> {/* Profil yükleniyor... */}
+        <Typography variant="h6" sx={{ ml: 2 }}>Loading favorites...</Typography> {/* Favoriler yükleniyor... */}
       </Box>
     );
   }
 
+  // Check error status
   if (error) {
     return (
-      <Box sx={{ maxWidth: 600, mx: "auto", mt: 10, p: 4, textAlign: "center" }}>
-        <Typography color="error" variant="h6">{error}</Typography>
+      <Box sx={{ maxWidth: 600, mx: "auto", mt: 10, p: 4, textAlign: "center", bgcolor: 'background.paper', borderRadius: 2, boxShadow: 3 }}>
+        <Typography color="error" variant="h6" gutterBottom>{error}</Typography>
         <Button variant="contained" onClick={() => navigate('/login')} sx={{ mt: 2 }}>
-          Log In
+            Log In
         </Button> {/* Giriş Yap */}
       </Box>
     );
   }
 
+  // If no user information (but no error)
   if (!user) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <Typography variant="h6">Profile data not available. Please log in.</Typography> {/* Profil verisi mevcut değil. Lütfen giriş yapın. */}
-      </Box>
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+            <Typography variant="h6">You must log in to see your favorites list.</Typography> {/* Favori listenizi görmek için giriş yapmalısınız. */}
+            <Button variant="contained" onClick={() => navigate('/login')} sx={{ mt: 2, ml: 2 }}>
+                Log In
+            </Button> {/* Giriş Yap */}
+        </Box>
     );
   }
 
+  // Successful display of the Favorites page
   return (
     <Box
       sx={{
@@ -107,20 +108,21 @@ export default function Profile() {
         borderRadius: 3,
         backgroundColor: "rgba(255,255,255,0.9)",
         textAlign: "center",
+        bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(50, 50, 50, 0.9)' : 'rgba(255,255,255,0.9)',
+        color: (theme) => theme.palette.mode === 'dark' ? '#e0e0e0' : 'inherit',
+        transition: 'background-color 0.3s ease-in-out, color 0.3s ease-in-out',
       }}
     >
       <Typography variant="h4" gutterBottom>
-        Welcome, {user.username}!
-      </Typography> {/* Hoş geldin, {user.username}! */}
-      <Typography variant="h6" color="text.secondary" sx={{ mb: 2 }}>
-        Email: {user.email}
-      </Typography>
-
-      <Typography variant="h5" sx={{ mt: 4, mb: 2 }}>
         Your Favorite Pokémon
       </Typography> {/* Favori Pokémon'ların */}
+
       {user.favorites && user.favorites.length > 0 ? (
-        <List sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper', mx: 'auto', borderRadius: '8px', boxShadow: 1 }}>
+        <List sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper', mx: 'auto', borderRadius: '8px', boxShadow: 1,
+            bgcolor: (theme) => theme.palette.mode === 'dark' ? '#424242' : 'background.paper',
+            color: (theme) => theme.palette.mode === 'dark' ? '#e0e0e0' : 'inherit',
+            transition: 'background-color 0.3s ease-in-out, color 0.3s ease-in-out',
+        }}>
           {user.favorites.map((pokemon, index) => (
             <React.Fragment key={pokemon.pokemonId}>
               <ListItem
@@ -145,15 +147,17 @@ export default function Profile() {
         </Typography> /* Henüz favori Pokémon'un yok. Pokémon listesinden ekleyebilirsin! */
       )}
 
+      {/* Optional: Back or go to another page button */}
       <Button
         variant="contained"
-        color="secondary"
-        onClick={() => { logout(); navigate("/"); }}
-        sx={{ mt: 4, bgcolor: '#ff5252', '&:hover': { bgcolor: '#f44336' } }}
+        color="primary"
+        onClick={() => navigate('/pokemons')}
+        sx={{ mt: 4 }}
       >
-        Log Out
-      </Button> {/* Çıkış Yap */}
+        Go Back to Pokémon List
+      </Button> {/* Pokémon Listesine Geri Dön */}
 
+      {/* Snackbar component */}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={4000}
@@ -165,7 +169,12 @@ export default function Profile() {
           severity={snackbarSeverity}
           sx={{ width: '100%', borderRadius: '8px', boxShadow: 3 }}
           action={
-            <IconButton aria-label="close" color="inherit" size="small" onClick={handleSnackbarClose}>
+            <IconButton
+              aria-label="close"
+              color="inherit"
+              size="small"
+              onClick={handleSnackbarClose}
+            >
               <CloseIcon fontSize="inherit" />
             </IconButton>
           }

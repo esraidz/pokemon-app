@@ -1,6 +1,7 @@
 // src/pages/Register.js
 import React, { useState } from "react";
-import { Box, TextField, Button, Typography } from "@mui/material";
+// Alert artık kullanılmadığı için import listesinden çıkarıldı
+import { Box, TextField, Button, Typography } from "@mui/material"; 
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
@@ -10,6 +11,7 @@ const Register = () => {
     username: "",
     email: "",
     password: "",
+    confirmPassword: "",
   });
   const [error, setError] = useState("");
 
@@ -21,14 +23,20 @@ const Register = () => {
     e.preventDefault();
     setError("");
 
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match. Please check again."); 
+      return;
+    }
+
     try {
-      const res = await axios.post("http://localhost:5000/api/auth/register", formData);
+      const { confirmPassword, ...dataToSend } = formData; 
+      const res = await axios.post("http://localhost:5001/api/auth/register", dataToSend);
       console.log(res.data);
-      alert("Registration successful!");
-      navigate("/login"); // Kayıt sonrası login sayfasına yönlendir
+      alert("Registration successful!"); 
+      navigate("/login");
     } catch (err) {
       console.error(err);
-      setError(err.response?.data?.error || "Something went wrong");
+      setError(err.response?.data?.error || "Something went wrong"); 
     }
   };
 
@@ -45,11 +53,11 @@ const Register = () => {
       }}
     >
       <Typography variant="h5" mb={3} textAlign="center">
-        Register
+        Register 
       </Typography>
       <form onSubmit={handleSubmit}>
         <TextField
-          label="Username"
+          label="Username" 
           name="username"
           value={formData.username}
           onChange={handleChange}
@@ -58,7 +66,7 @@ const Register = () => {
           required
         />
         <TextField
-          label="Email"
+          label="Email" 
           name="email"
           type="email"
           value={formData.email}
@@ -68,10 +76,20 @@ const Register = () => {
           required
         />
         <TextField
-          label="Password"
+          label="Password" 
           name="password"
           type="password"
           value={formData.password}
+          onChange={handleChange}
+          fullWidth
+          margin="normal"
+          required
+        />
+        <TextField
+          label="Confirm Password" 
+          name="confirmPassword"
+          type="password"
+          value={formData.confirmPassword}
           onChange={handleChange}
           fullWidth
           margin="normal"
@@ -83,7 +101,7 @@ const Register = () => {
           </Typography>
         )}
         <Button type="submit" variant="contained" color="primary" fullWidth sx={{ mt: 2 }}>
-          Register
+          Register 
         </Button>
       </form>
     </Box>
