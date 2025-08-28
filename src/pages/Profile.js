@@ -5,172 +5,132 @@ import {
   Typography,
   Button,
   CircularProgress,
-  List,
-  ListItem,
-  ListItemText,
-  IconButton,
   Snackbar,
   Alert,
-  Divider,
+  IconButton,
+  Avatar,
 } from "@mui/material";
-import DeleteIcon from '@mui/icons-material/Delete';
-import CloseIcon from '@mui/icons-material/Close';
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import CloseIcon from "@mui/icons-material/Close";
 import axios from "axios";
+import { useAuth } from "../context/AuthContext";
 
 export default function Profile() {
-  const { user, token, loading: authLoading, logout, setUser, removeFavorite } = useAuth();
-  const navigate = useNavigate();
-  const [error, setError] = useState("");
+  const { user, token, setUser, loading: authLoading } = useAuth();
   const [apiLoading, setApiLoading] = useState(true);
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
+  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [preview, setPreview] = useState(null); // 🆕 Önizleme URL'si
 
   useEffect(() => {
     if (!authLoading && token) {
-      const fetchProfile = async () => {
-        try {
-          setApiLoading(true);
-          const res = await axios.get("http://localhost:5001/api/auth/profile", {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          setUser(res.data.user);
-        } catch (err) {
-          console.error("Error fetching profile data:", err); // Profil verileri çekilirken hata
-          setError(err.response?.data?.error || "An error occurred while loading profile data."); // Profil verileri yüklenirken bir hata oluştu.
-        } finally {
-          setApiLoading(false);
-        }
-      };
-      fetchProfile();
+      setApiLoading(false);
     }
-  }, [authLoading, token]); // user and setUser are no longer dependencies
+  }, [authLoading, token]);
 
-  const handleRemoveFavorite = async (pokemonId, pokemonName) => {
+  // Dosya seçildiğinde
+  const handleFileChange = (e) => {
+    if (e.target.files.length > 0) {
+      const file = e.target.files[0];
+      setSelectedFile(file);
+      setPreview(URL.createObjectURL(file)); // 🆕 Önizleme oluştur
+    }
+  };
+
+  // Upload işlemi
+  const handleUpload = async () => {
+    if (!selectedFile) return;
+
+    const formData = new FormData();
+    formData.append("profilePic", selectedFile);
+
     try {
-      await removeFavorite(pokemonId);
-      setSnackbarMessage(`${pokemonName} successfully removed from favorites.`); // favorilerden başarıyla silindi.
-      setSnackbarSeverity("success");
-      setSnackbarOpen(true);
+      const res = await axios.post("http://localhost:5001/api/profile/profile-pic", formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      // 🆕 Cache kırmak için timestamp ekle
+      setUser({
+        ...res.data.user,
+        profilePic: res.data.user.profilePic + "?t=" + new Date().getTime()
+      });
+
+      setSnackbar({ open: true, message: "Profile picture updated!", severity: "success" });
+      setSelectedFile(null);
+      setPreview(null); // Önizleme sıfırla
     } catch (err) {
-      console.error("Error removing favorite:", err); // Favori silinirken hata:
-      const errorMessage = err.response?.data?.error || "An error occurred while removing favorite."; // Favori silinirken bir hata oluştu.
-      setSnackbarMessage(`Error: ${errorMessage}`); // Hata:
-      setSnackbarSeverity("error");
-      setSnackbarOpen(true);
+      console.error(err);
+      setSnackbar({ open: true, message: "Error uploading profile picture.", severity: "error" });
     }
   };
 
-  const handleSnackbarClose = (event, reason) => {
-    if (reason === 'clickaway') return;
-    setSnackbarOpen(false);
-  };
+  const handleSnackbarClose = () => setSnackbar({ ...snackbar, open: false });
 
   if (authLoading || apiLoading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
         <CircularProgress />
-        <Typography variant="h6" sx={{ ml: 2 }}>Loading profile...</Typography> {/* Profil yükleniyor... */}
-      </Box>
-    );
-  }
-
-  if (error) {
-    return (
-      <Box sx={{ maxWidth: 600, mx: "auto", mt: 10, p: 4, textAlign: "center" }}>
-        <Typography color="error" variant="h6">{error}</Typography>
-        <Button variant="contained" onClick={() => navigate('/login')} sx={{ mt: 2 }}>
-          Log In
-        </Button> {/* Giriş Yap */}
+        <Typography variant="h6" sx={{ ml: 2 }}>
+          Loading profile...
+        </Typography>
       </Box>
     );
   }
 
   if (!user) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <Typography variant="h6">Profile data not available. Please log in.</Typography> {/* Profil verisi mevcut değil. Lütfen giriş yapın. */}
+      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
+        <Typography variant="h6">Profile data not available. Please log in.</Typography>
       </Box>
     );
   }
 
   return (
-    <Box
-      sx={{
-        maxWidth: 600,
-        mx: "auto",
-        mt: 10,
-        p: 4,
-        boxShadow: 3,
-        borderRadius: 3,
-        backgroundColor: "rgba(255,255,255,0.9)",
-        textAlign: "center",
-      }}
-    >
+    <Box sx={{ maxWidth: 600, mx: "auto", mt: 10, p: 4, boxShadow: 3, borderRadius: 3, textAlign: "center", backgroundColor: "rgba(255,255,255,0.9)" }}>
       <Typography variant="h4" gutterBottom>
         Welcome, {user.username}!
-      </Typography> {/* Hoş geldin, {user.username}! */}
+      </Typography>
       <Typography variant="h6" color="text.secondary" sx={{ mb: 2 }}>
         Email: {user.email}
       </Typography>
 
-      <Typography variant="h5" sx={{ mt: 4, mb: 2 }}>
-        Your Favorite Pokémon
-      </Typography> {/* Favori Pokémon'ların */}
-      {user.favorites && user.favorites.length > 0 ? (
-        <List sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper', mx: 'auto', borderRadius: '8px', boxShadow: 1 }}>
-          {user.favorites.map((pokemon, index) => (
-            <React.Fragment key={pokemon.pokemonId}>
-              <ListItem
-                secondaryAction={
-                  <IconButton edge="end" aria-label="delete" onClick={() => handleRemoveFavorite(pokemon.pokemonId, pokemon.pokemonName)}>
-                    <DeleteIcon color="error" />
-                  </IconButton>
-                }
-              >
-                <ListItemText
-                  primary={pokemon.pokemonName}
-                  primaryTypographyProps={{ textTransform: 'capitalize' }}
-                />
-              </ListItem>
-              {index < user.favorites.length - 1 && <Divider component="li" />}
-            </React.Fragment>
-          ))}
-        </List>
-      ) : (
-        <Typography variant="body1" color="text.secondary">
-          You don't have any favorite Pokémon yet. You can add them from the Pokémon list!
-        </Typography> /* Henüz favori Pokémon'un yok. Pokémon listesinden ekleyebilirsin! */
-      )}
+      {/* Profil Fotoğrafı */}
+      <Avatar
+        src={preview || (user.profilePic ? `http://localhost:5001/uploads/${user.profilePic}` : "")}
+        alt="Profile Picture"
+        sx={{ width: 120, height: 120, mx: "auto", mb: 2 }}
+      />
 
+      <input
+        type="file"
+        accept="image/*"
+        onChange={handleFileChange}
+        style={{ display: "block", margin: "10px auto" }}
+      />
       <Button
         variant="contained"
-        color="secondary"
-        onClick={() => { logout(); navigate("/"); }}
-        sx={{ mt: 4, bgcolor: '#ff5252', '&:hover': { bgcolor: '#f44336' } }}
+        onClick={handleUpload}
+        disabled={!selectedFile}
+        sx={{ mb: 3 }}
       >
-        Log Out
-      </Button> {/* Çıkış Yap */}
+        Upload
+      </Button>
 
-      <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={4000}
-        onClose={handleSnackbarClose}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
+      {/* Snackbar */}
+      <Snackbar open={snackbar.open} autoHideDuration={4000} onClose={handleSnackbarClose} anchorOrigin={{ vertical: "bottom", horizontal: "center" }}>
         <Alert
           onClose={handleSnackbarClose}
-          severity={snackbarSeverity}
-          sx={{ width: '100%', borderRadius: '8px', boxShadow: 3 }}
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}
           action={
             <IconButton aria-label="close" color="inherit" size="small" onClick={handleSnackbarClose}>
               <CloseIcon fontSize="inherit" />
             </IconButton>
           }
         >
-          {snackbarMessage}
+          {snackbar.message}
         </Alert>
       </Snackbar>
     </Box>

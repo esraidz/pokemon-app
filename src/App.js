@@ -8,7 +8,8 @@ import FAQPage from "./pages/FAQPage";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
 import Profile from "./pages/Profile";
-import FavoritesPage from "./pages/FavoritesPage"; // 🆕 Favoriler sayfası eklendi
+import FavoritesPage from "./pages/FavoritesPage";
+import PikachuGame from "./components/PikachuGame"; // 🆕 Pikachu Game import
 import { AuthProvider } from "./context/AuthContext";
 
 function App() {
@@ -23,7 +24,8 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
           <Route path="/profile" element={<Profile />} />
-          <Route path="/favorites" element={<FavoritesPage />} /> {/* 🆕 Favoriler rotası */}
+          <Route path="/favorites" element={<FavoritesPage />} />
+          <Route path="/game" element={<PikachuGame />} /> {/* 🆕 Pikachu Game rotası */}
         </Routes>
       </AuthProvider>
     </Router>

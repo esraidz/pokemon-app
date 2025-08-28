@@ -4,11 +4,12 @@ const userSchema = new mongoose.Schema({
     username: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
+    profilePic: { type: String, default: "" }, // yeni alan
     favorites: {
         type: [{
-            pokemonId: { type: Number, required: true },   // Pokédex ID
-            name: { type: String, required: true },        // Pokémon adı
-            image: { type: String, required: true }        // Pokémon resmi
+            pokemonId: { type: Number, required: true },   
+            name: { type: String, required: true },        
+            image: { type: String, required: true }        
         }],
         default: []
     }
